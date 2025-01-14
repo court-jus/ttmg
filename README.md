@@ -1,0 +1,1 @@
+# The terminal must grow
