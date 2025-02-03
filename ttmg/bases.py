@@ -28,7 +28,7 @@ class Link(Debugable):
             # Send item 0 to outbound
             sent_item = False
             if self.outbound and self.items:
-                if self.items[0] in self.outbound.ingredients and len(self.outbound.inbuffer) < self.outbound.maxbuffer:
+                if len(self.outbound.inbuffer) < self.outbound.maxbuffer:
                     item = self.items.pop(0)
                     self.outbound.send(item)
                     sent_item = True
@@ -86,8 +86,7 @@ class Producer(Linkable):
         self.debug("produced", self.product, "outbuffer:", self.outbuffer)
 
 class Consumer(Linkable):
-    def __init__(self, name, ingredients):
-        self.ingredients = ingredients
+    def __init__(self, name):
         self.inbuffer = []
         self.maxbuffer = 4
         super().__init__(name)
@@ -98,30 +97,3 @@ class Consumer(Linkable):
 
     def tick(self):
         self.debug("inbuffer", self.inbuffer)
-
-    def prepare_recipe(self):
-        recipe_ingredients = []
-        for item_type in self.ingredients:
-            recipe_ingredients.append(self.get_ingredient(item_type))
-        return recipe_ingredients
-
-    def ready(self):
-        recipe_ingredients = self.prepare_recipe()
-        missing = any(item is None for item in recipe_ingredients)
-        # Put them back
-        for item in recipe_ingredients:
-            if item is not None:
-                self.inbuffer.append(item)
-        if missing:
-            self.debug("  missing ingredients:", recipe_ingredients)
-            return False
-        return True
-
-    def get_ingredient(self, ingredient):
-        for idx, item in enumerate(self.inbuffer):
-            if item == ingredient:
-                break
-        else:
-            return None
-        return self.inbuffer.pop(idx)
-
